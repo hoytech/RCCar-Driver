@@ -71,8 +71,6 @@ my $signal;
 $h->tx(sub {
   my $block_size = shift;
 
-  print "$cmd\n";
-
   if ($cmd eq '') {
     $signal = undef;
 
@@ -112,13 +110,15 @@ $v->require('app')->on(ready => sub {
 
   $window->loadUrl("file://$app_root/index.html");
 
+  $window->on(close => sub { exit });
+
   $window->openDevTools() if $ENV{DEVTOOLS};
 
   $ipc->on('update_cmd' => sub {
     my ($event, $mycmd) = @_;
 
-    print "SWITCH: $mycmd\n";
     $cmd = $mycmd;
+    $signal = undef;
   });
 });
 
