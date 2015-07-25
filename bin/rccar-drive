@@ -1,47 +1,16 @@
 use common::sense;
 
+use Radio::HackRF;
+use Valence;
+
 use PDL;
 use PDL::Complex;
 use PDL::Constants qw(PI);
-
-use Radio::HackRF;
-use Valence;
 
 use Cwd 'abs_path';
 
 
 
-
-my $app_root = abs_path() . "/app";
- 
-my $v = Valence->new;
-
-my $browser_window = $v->require('browser-window');
-my $ipc = $v->require('ipc');
- 
-$v->require('app')->on(ready => sub {
-  my $window = $browser_window->new({
-                   width => 1000,
-                   height => 600,
-                   title => 'RC Car Driver',
-               });
- 
-  $window->loadUrl("file://$app_root/index.html");
-
-  $window->openDevTools() if $ENV{DEVTOOLS};
-
-  $ipc->on('update_cmd' => sub {
-    my ($event, $message) = @_;
- 
-    print "$message\n"; ## prints 'my message'
-  });
-});
- 
-$v->run; ## enter event loop
-
-
-
-__END__
 my $sample_rate = 8_000_000;
 my $freq = 470_000;
 my $amp_scale = 50;
@@ -52,7 +21,7 @@ my $dc_offset = 5;
 
 my $command_to_pulses_map = {
   U => 10,
-  D => 52,
+  D => 40,
   L => 58,
   R => 64,
 
@@ -92,19 +61,24 @@ sub generate_base_sequence {
 
 
 
-my $h = Radio::HackRF->new(freq => 35_000_000, sample_rate => $sample_rate);
+my $h = Radio::HackRF->new(freq => 35_000_000, sample_rate => $sample_rate, amp_enable => 1);
 
 
-my $cmd = 'D';
+my $cmd = '';
 my $signal;
 
 
 $h->tx(sub {
   my $block_size = shift;
 
-  if (!defined $cmd) {
+  print "$cmd\n";
+
+  if ($cmd eq '') {
     $signal = undef;
-    return;
+
+    my $silence = zeros($block_size / 2) + ($dc_offset + ($dc_offset * i));
+
+    return $silence->byte->flat->get_dataref;
   }
 
   if (!defined $signal) {
@@ -118,14 +92,34 @@ $h->tx(sub {
   return $transmission->get_dataref;
 });
 
-my $z; $z = AE::timer 1, 0, sub {
-  print "SWITCHING TO UP\n";
-  $cmd = 'U';
-  $signal = undef;
-  $z = AE::timer 1, 0, sub {
-    print "SWITCHING OFF\n";
-    $cmd = undef;
-  };
-};
 
-$h->run;
+
+
+
+my $app_root = abs_path() . "/app";
+
+my $v = Valence->new;
+
+my $browser_window = $v->require('browser-window');
+my $ipc = $v->require('ipc');
+
+$v->require('app')->on(ready => sub {
+  my $window = $browser_window->new({
+                   width => 1000,
+                   height => 600,
+                   title => 'RC Car Driver',
+               });
+
+  $window->loadUrl("file://$app_root/index.html");
+
+  $window->openDevTools() if $ENV{DEVTOOLS};
+
+  $ipc->on('update_cmd' => sub {
+    my ($event, $mycmd) = @_;
+
+    print "SWITCH: $mycmd\n";
+    $cmd = $mycmd;
+  });
+});
+
+$v->run; ## enter event loop
