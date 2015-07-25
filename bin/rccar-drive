@@ -83,7 +83,7 @@ $h->tx(sub {
     $signal = generate_base_sequence($command_to_pulses_map->{$cmd});
   }
 
-  my $transmission = $signal->slice("0:" . ($block_size - 1));
+  my $transmission = $signal->slice([0, $block_size - 1]);
 
   $signal = $signal->rotate(-$block_size);
 

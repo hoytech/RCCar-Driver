@@ -7,6 +7,10 @@
   </style>
 
   <body>
+    <div>
+      Press the arrow keys...
+    </div>
+
     <table class="buttons">
       <tr><td></td><td class="up"></td><td></td></tr>
       <tr><td class="left"></td><td class="down"></td><td class="right"></td></tr>
@@ -47,20 +51,6 @@
       }
     }
 
-    document.getElementsByTagName('body')[0].addEventListener("keyup", function(e) {
-      if (e.keyCode == '38') {
-        up_pressed = false;
-      } else if (e.keyCode == '40') {
-        down_pressed = false;
-      } else if (e.keyCode == '37') {
-        left_pressed = false;
-      } else if (e.keyCode == '39') {
-        right_pressed = false;
-      }
-
-      update_keypress();
-    });
-
     document.getElementsByTagName('body')[0].addEventListener("keydown", function(e) {
       if (e.keyCode == '38') {
         up_pressed = true;
@@ -70,7 +60,25 @@
         left_pressed = true;
       } else if (e.keyCode == '39') {
         right_pressed = true;
+      } else {
+        return;
       } 
+
+      update_keypress();
+    });
+
+    document.getElementsByTagName('body')[0].addEventListener("keyup", function(e) {
+      if (e.keyCode == '38') {
+        up_pressed = false;
+      } else if (e.keyCode == '40') {
+        down_pressed = false;
+      } else if (e.keyCode == '37') {
+        left_pressed = false;
+      } else if (e.keyCode == '39') {
+        right_pressed = false;
+      } else {
+        return;
+      }
 
       update_keypress();
     });
