@@ -5,9 +5,43 @@ use PDL::Complex;
 use PDL::Constants qw(PI);
 
 use Radio::HackRF;
+use Valence;
+
+use Cwd 'abs_path';
 
 
 
+
+my $app_root = abs_path() . "/app";
+ 
+my $v = Valence->new;
+
+my $browser_window = $v->require('browser-window');
+my $ipc = $v->require('ipc');
+ 
+$v->require('app')->on(ready => sub {
+  my $window = $browser_window->new({
+                   width => 1000,
+                   height => 600,
+                   title => 'RC Car Driver',
+               });
+ 
+  $window->loadUrl("file://$app_root/index.html");
+
+  $window->openDevTools() if $ENV{DEVTOOLS};
+
+  $ipc->on('update_cmd' => sub {
+    my ($event, $message) = @_;
+ 
+    print "$message\n"; ## prints 'my message'
+  });
+});
+ 
+$v->run; ## enter event loop
+
+
+
+__END__
 my $sample_rate = 8_000_000;
 my $freq = 470_000;
 my $amp_scale = 50;

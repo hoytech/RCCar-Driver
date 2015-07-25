@@ -1,0 +1,78 @@
+<html>
+  <style>
+    .buttons td {
+      height: 200px;
+      width: 200px;
+    }
+  </style>
+
+  <body>
+    <table class="buttons">
+      <tr><td></td><td class="up"></td><td></td></tr>
+      <tr><td class="left"></td><td class="down"></td><td class="right"></td></tr>
+    </table>
+  </body>
+
+  <script>
+    "use strict";
+
+    var ipc = require('ipc');
+
+    var up_pressed, down_pressed, left_pressed, right_pressed;
+    var curr_cmd = '';
+
+    function update_keypress() {
+      var up_cmd = up_pressed && !down_pressed;
+      var down_cmd = down_pressed && !up_pressed;
+
+      var left_cmd = left_pressed && !right_pressed;
+      var right_cmd = right_pressed && !left_pressed;
+
+      document.getElementsByClassName("up")[0].style.backgroundColor = up_cmd ? 'red' : null;
+      document.getElementsByClassName("down")[0].style.backgroundColor = down_cmd ? 'red' : null;
+      document.getElementsByClassName("left")[0].style.backgroundColor = left_cmd ? 'red' : null;
+      document.getElementsByClassName("right")[0].style.backgroundColor = right_cmd ? 'red' : null;
+
+      var cmd = '';
+
+      if (up_cmd) cmd += 'U';
+      if (down_cmd) cmd += 'D';
+      if (left_cmd) cmd += 'L';
+      if (right_cmd) cmd += 'R';
+
+      if (cmd !== curr_cmd) {
+        ipc.send('update_cmd', cmd);
+
+        curr_cmd = cmd;
+      }
+    }
+
+    document.getElementsByTagName('body')[0].addEventListener("keyup", function(e) {
+      if (e.keyCode == '38') {
+        up_pressed = false;
+      } else if (e.keyCode == '40') {
+        down_pressed = false;
+      } else if (e.keyCode == '37') {
+        left_pressed = false;
+      } else if (e.keyCode == '39') {
+        right_pressed = false;
+      }
+
+      update_keypress();
+    });
+
+    document.getElementsByTagName('body')[0].addEventListener("keydown", function(e) {
+      if (e.keyCode == '38') {
+        up_pressed = true;
+      } else if (e.keyCode == '40') {
+        down_pressed = true;
+      } else if (e.keyCode == '37') {
+        left_pressed = true;
+      } else if (e.keyCode == '39') {
+        right_pressed = true;
+      } 
+
+      update_keypress();
+    });
+  </script>
+</html>
