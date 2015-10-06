@@ -1,6 +1,6 @@
 use common::sense;
 
-use Radio::HackRF;
+use SDR::Radio::HackRF;
 use Valence;
 
 use PDL;
@@ -11,8 +11,9 @@ use Cwd 'abs_path';
 
 
 
+my $freq_base;
+my $freq_offset;
 my $sample_rate = 8_000_000;
-my $freq = 470_000;
 my $amp_scale = 50;
 my $pulse_width = 0.0005;
 my $dc_offset = 5;
@@ -44,7 +45,7 @@ sub generate_base_sequence {
                    pdl(@message));
 
 
-  my $sample_sequence = sequence($signal->getdim(0)) * 2 * PI * ($freq/$sample_rate);
+  my $sample_sequence = sequence($signal->getdim(0)) * 2 * PI * ($freq_offset/$sample_rate);
 
   my $carrier = cos($sample_sequence) + (i * sin($sample_sequence));
 
@@ -61,7 +62,36 @@ sub generate_base_sequence {
 
 
 
-my $h = Radio::HackRF->new(freq => 35_000_000, sample_rate => $sample_rate, amp_enable => 1);
+my $h = SDR::Radio::HackRF->new;
+
+
+sub set_car_freq {
+  my $freq = shift;
+
+  $freq_base = $freq - 200_000;
+  $freq_offset = 200_000;
+
+  $h->frequency($freq_base);
+}
+
+
+if (defined $ARGV[0]) {
+  my $freq = $ARGV[0];
+
+  $freq =~ s/[_,]//g;
+
+  set_car_freq($freq);
+} else {
+  print STDERR "Usage: $0 <frequency>\n\n";
+  print STDERR "  Suggested freqs:\n";
+  print STDERR "    35_470_000\n";
+  print STDERR "    27_141_000\n";
+  exit 1;
+}
+
+
+$h->sample_rate($sample_rate);
+$h->amp_enable(1);
 
 
 my $cmd = '';
