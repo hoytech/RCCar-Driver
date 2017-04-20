@@ -124,23 +124,26 @@ $h->tx(sub {
 
 
 
-my $app_root = abs_path() . "/app";
+my $index_file = 'file:///' . abs_path() . "/app/index.html";
 
-my $v = Valence->new;
 
-my $browser_window = $v->require('browser-window');
-my $ipc = $v->require('ipc');
+use Valence;
 
-$v->require('app')->on(ready => sub {
-  my $window = $browser_window->new({
-                   width => 1000,
-                   height => 600,
-                   title => 'RC Car Driver',
-               });
+my $valence = Valence->new;
 
-  $window->loadUrl("file://$app_root/index.html");
+my $electron = $valence->require('electron');
+my $ipc = $electron->attr('ipcMain');
+
+$electron->attr('app')->on(ready => sub {
+  my $window = $electron->attr('BrowserWindow')->new({
+                       width => 1000,
+                       height => 600,
+                       title => 'RC Car Driver',
+                    });
 
   $window->on(close => sub { exit });
+
+  $window->loadURL($index_file);
 
   $window->openDevTools() if $ENV{DEVTOOLS};
 
@@ -152,4 +155,4 @@ $v->require('app')->on(ready => sub {
   });
 });
 
-$v->run; ## enter event loop
+$valence->run;

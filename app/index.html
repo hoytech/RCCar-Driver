@@ -20,7 +20,7 @@
   <script>
     "use strict";
 
-    var ipc = require('ipc');
+    var ipc = require('electron').ipcRenderer;
 
     var up_pressed, down_pressed, left_pressed, right_pressed;
     var curr_cmd = '';
